@@ -10,7 +10,7 @@
               extra-toggle-classes="nav-link-custom"
               right
             >
-              <b-dropdown-item v-for="origin in filters">{{origin}}</b-dropdown-item>
+              <b-dropdown-item v-for="origin in filters">{{origin.origin}}</b-dropdown-item>
             </b-nav-item-dropdown>
           </b-navbar-nav>
       </b-navbar>
@@ -42,15 +42,21 @@
       this.listCats();
     },
     methods: {
+      filter (origin) {
+
+      },
       async listCats () {
         try {
           const data = await axios.get('https://api.thecatapi.com/v1/breeds', {'x-api-key': '065ec24f-44b5-4ddb-8090-bb36eb150183'})
-          // Thumbnail, Description
           let that = this
-          _.each(data.data,function(cat){
-            that.filters.push(cat.origin)
-          })
 
+          // Filters
+          _.each(data.data,function(cat){
+            that.filters.push({id: cat.country_code, origin: cat.origin})
+          })
+          that.filters = _.uniqWith(that.filters, _.isEqual)
+
+          // Thumbnail, Description
           Promise.all(data.data.map(cat => {
             return this.details(cat)
           })).then(details => {
