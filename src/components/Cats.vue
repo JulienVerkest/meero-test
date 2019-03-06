@@ -3,21 +3,22 @@
     <b-container fluid>
       <b-navbar toggleable="md" type="dark" variant="primary">
         <b-navbar-brand href="#">THE CAT WEBSITE</b-navbar-brand>
-          <b-navbar-nav class="ml-auto">
+          <b-navbar-nav>
             <b-nav-item-dropdown
               id="nav7_ddown"
               text="Filtre par origine"
               extra-toggle-classes="nav-link-custom"
               right
             >
-              <b-dropdown-item v-for="origin in filters">{{origin.origin}}</b-dropdown-item>
+              <b-dropdown-item @click="filterByOrigin('all')">Voir tous</b-dropdown-item>
+              <b-dropdown-item v-for="origin in filters" @click="filterByOrigin(origin.id)">{{origin.origin}}</b-dropdown-item>
             </b-nav-item-dropdown>
           </b-navbar-nav>
       </b-navbar>
     </b-container fluid>
     <b-container class="mt-4">
       <b-card-group v-for="cats in groupCats" deck>
-        <b-card v-for="(cat, i) in cats" :title="cat.name" :img-src="cat.thumbnail" img-alt="" img-top tag="article" style="max-width: 20rem;" class="mb-2">
+        <b-card v-for="(cat, i) in cats" :title="cat.name" :img-src="cat.thumbnail" img-alt="" img-top tag="article" style="max-width: 20rem;" class="mb-2" >
           <b-card-text>
             {{cat.origin}}
           </b-card-text>
@@ -35,22 +36,31 @@
     data () {
       return {
         groupCats: [],
-        filters:[] 
+        allCats: [],
+        filters:[],
+        filterOrigin: ''
       }
     },
     mounted() {
       this.listCats();
     },
     methods: {
-      filter (origin) {
-
+      filterByOrigin (code) {
+        this.filterOrigin = code
+        if(this.filterOrigin === 'all') {
+          this.groupCats = _.chunk(this.allCats, 3)
+        }
+        else {
+          this.groupCats = _.chunk(_.filter(this.allCats, { 'country_code': this.filterOrigin}), 3)
+        }
+        
       },
       async listCats () {
         try {
           const data = await axios.get('https://api.thecatapi.com/v1/breeds', {'x-api-key': '065ec24f-44b5-4ddb-8090-bb36eb150183'})
           let that = this
 
-          // Filters
+          // Create filters
           _.each(data.data,function(cat){
             that.filters.push({id: cat.country_code, origin: cat.origin})
           })
@@ -67,9 +77,10 @@
                 }
               });
             this.groupCats = _.chunk(data.data, 3)
+            this.allCats = data.data
           })
         } catch (err) {
-          console.error(err);
+          console.error('Error API CAT', err);
         }
       },
       async details(cat) {
@@ -91,7 +102,7 @@
           }
           return details;
         } catch (err) {
-          console.error("Error wikipedia", err);
+          console.error('Error wikipedia', err);
         }
       }
     }
