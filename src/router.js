@@ -1,7 +1,6 @@
 import Vue from 'vue'
 import Router from 'vue-router'
-import Home from './views/Home.vue'
-import Cats from './components/Cats.vue'
+import Cats from '@/components/Cats.vue'
 import BootstrapVue from 'bootstrap-vue'
 import 'bootstrap/dist/css/bootstrap.css'
 import 'bootstrap-vue/dist/bootstrap-vue.css'
@@ -17,7 +16,19 @@ export default new Router({
     {
       path: '/',
       name: 'cats',
-      component: Cats
+      component: Cats,
+      // children: [
+      //   {
+      //     path: ':id',
+      //     name: 'Modal',
+      //     components: {
+      //       rule: Modal
+      //     },
+      //     meta: {
+      //       showModal: false
+      //     }
+      //   }
+      // ]
     }
   ]
 })

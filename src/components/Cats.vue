@@ -22,9 +22,21 @@
           <b-card-text>
             {{cat.origin}}
           </b-card-text>
-          <b-button href="#" variant="primary" class="float-right">Détails</b-button>
+          <b-button class="btn btn-primary float-right" @click="popup(cat)">Détails</b-button> 
         </b-card>
       </b-card-group>
+
+      <b-modal id="catmodal" ref="catmodal" title="Détail du chat" size="lg">
+        <b-row>
+          <b-col>
+            <b-img :src="selectedCatThumbnail" fluid alt="" />
+          </b-col>
+          <b-col>
+            <h2>{{selectedCatName}}</h2>
+            <p>{{selectedCatDescription}}</p>
+          </b-col>
+        </b-row>
+      </b-modal>
     </b-container>
   </div>
 </template>
@@ -35,16 +47,25 @@
     name: 'Cats',
     data () {
       return {
-        groupCats: [],
-        allCats: [],
-        filters:[],
-        filterOrigin: ''
+        groupCats: [], // all cats with filters
+        allCats: [], // all cats without filter
+        filters:[], // all countries
+        filterOrigin: '', // country origin filter
+        selectedCatName: '',
+        selectedCatThumbnail: '',
+        selectedCatDescription: ''
       }
     },
     mounted() {
-      this.listCats();
+      this.listCats()
     },
     methods: {
+      popup (cat) {
+        this.selectedCatThumbnail = cat.thumbnail
+        this.selectedCatName = cat.name
+        this.selectedCatDescription = cat.description
+        this.$refs.catmodal.show()
+      },
       filterByOrigin (code) {
         this.filterOrigin = code
         if(this.filterOrigin === 'all') {
@@ -53,7 +74,6 @@
         else {
           this.groupCats = _.chunk(_.filter(this.allCats, { 'country_code': this.filterOrigin}), 3)
         }
-        
       },
       async listCats () {
         try {
@@ -61,7 +81,7 @@
           let that = this
 
           // Create filters
-          _.each(data.data,function(cat){
+          _.each(data.data, function(cat) {
             that.filters.push({id: cat.country_code, origin: cat.origin})
           })
           that.filters = _.uniqWith(that.filters, _.isEqual)
@@ -70,12 +90,12 @@
           Promise.all(data.data.map(cat => {
             return this.details(cat)
           })).then(details => {
-              details.forEach((cat, i) => {
+              _.each(details, function(cat, i) {
                 if(cat) {
                   data.data[i].thumbnail = cat.thumbnail
                   data.data[i].description = cat.description
                 }
-              });
+              })
             this.groupCats = _.chunk(data.data, 3)
             this.allCats = data.data
           })
@@ -102,8 +122,13 @@
           }
           return details;
         } catch (err) {
-          console.error('Error wikipedia', err);
+          console.error('Error wikipedia', err)
         }
+      }
+    },
+    watch: {
+      '$route.meta' ({showModal}) {
+        this.showModal = showModal
       }
     }
   }
